@@ -12,6 +12,7 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         about: fileURLToPath(new URL('./about/index.html', import.meta.url)),
+        crm: fileURLToPath(new URL('./crm/index.html', import.meta.url)),
       },
     },
   },

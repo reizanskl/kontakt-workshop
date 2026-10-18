@@ -7,6 +7,8 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { validateLead, type Device, type FieldErrors } from '@/lib/lead-schema';
+import { addOrder } from '@/crm/store';
+import { dayOffset, deviceLabels } from '@/crm/model';
 
 function Arrow({ diagonal = false, ...props }: React.SVGProps<SVGSVGElement> & { diagonal?: boolean }) {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{diagonal ? <path d="M5 19 19 5M5 5h14v14" /> : <path d="M4 12h16m-7-7 7 7-7 7" />}</svg>;
@@ -37,6 +39,7 @@ export default function Workshop() {
   const [fields, setFields] = useState({ name: '', phone: '', device: 'phone' as Device, problem: '' });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const lastSubmission = useRef('');
   const successHeading = useRef<HTMLHeadingElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
 
@@ -67,7 +70,11 @@ export default function Workshop() {
       document.getElementById(Object.keys(validation.errors)[0])?.focus();
       return;
     }
-    // Portfolio interaction only: no network request, storage, or Telegram integration.
+    const fingerprint = JSON.stringify(validation.lead);
+    if (lastSubmission.current !== fingerprint) {
+      addOrder({ ...validation.lead, model: deviceLabels[validation.lead.device], status: 'new', priority: 'normal', masterId: '', amount: 0, due: dayOffset(2) }, 'site');
+      lastSubmission.current = fingerprint;
+    }
     setSubmitted(true);
   }
   function editRequest() {
@@ -80,10 +87,10 @@ export default function Workshop() {
     <a className="skip-link" href="#main">Перейти к содержимому</a>
     <header className="site-header container">
       <a href="#main" className="wordmark" aria-label="Контакт — начало страницы">контакт</a>
-      <nav className="desktop-nav" aria-label="Основная навигация"><a href="#services">Услуги</a><a href="#process">Как работаем</a><a href="#faq">Вопросы</a></nav>
+      <nav className="desktop-nav" aria-label="Основная навигация"><a href="#services">Услуги</a><a href="#process">Как работаем</a><a href="#faq">Вопросы</a><a href="./crm/">CRM мастерской</a></nav>
       <Button asChild variant="outline" className="header-cta"><a href="#request">Обсудить ремонт</a></Button>
       <button className="menu-toggle" type="button" ref={menuButton} aria-label={menuOpen ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={() => setMenuOpen(!menuOpen)}><svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">{menuOpen ? <path d="m5 5 14 14M19 5 5 19" /> : <path d="M3 7h18M3 12h18M3 17h18" />}</svg></button>
-      {menuOpen && <nav className="mobile-menu" id="mobile-menu" aria-label="Мобильная навигация">{[['#services', 'Услуги'], ['#process', 'Как работаем'], ['#faq', 'Вопросы'], ['#request', 'Обсудить ремонт']].map(([href, label]) => <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}<Arrow /></a>)}</nav>}
+      {menuOpen && <nav className="mobile-menu" id="mobile-menu" aria-label="Мобильная навигация">{[['#services', 'Услуги'], ['#process', 'Как работаем'], ['#faq', 'Вопросы'], ['./crm/', 'CRM мастерской'], ['#request', 'Обсудить ремонт']].map(([href, label]) => <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}<Arrow /></a>)}</nav>}
     </header>
     <main id="main">
       <section className="hero container" aria-labelledby="hero-title">
